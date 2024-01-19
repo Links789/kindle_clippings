@@ -26,12 +26,14 @@ def get_clip(section):
         return
 
     clip['book'] = lines[0]
-    match = re.search(r'(\d+)-\d+', lines[1])
+    match = re.search(r'(\d+)-(\d+)', lines[1])
     if not match:
         return
-    position = match.group(1)
+    start_position = match.group(1)
+    end_position = match.group(2)
 
-    clip['position'] = int(position)
+    clip['position'] = int(start_position)
+    clip['end_position'] = int(end_position)
     clip['content'] = lines[2]
 
     return clip
@@ -39,16 +41,20 @@ def get_clip(section):
 
 def export_txt(clips):
     """
-    Export each book's clips to single text.
+    Export each book's clips to a single text file.
     """
     for book in clips:
         lines = []
         for pos in sorted(clips[book]):
-            lines.append(clips[book][pos].encode('utf-8'))
+            lines.append(clips[book][pos])
 
-        filename = os.path.join(OUTPUT_DIR, u"%s.md" % book)
-        with open(filename, 'wb') as f:
+        # Limit book title length
+        short_book_name = book[:20]
+
+        filename = os.path.join(OUTPUT_DIR, u"%s.md" % short_book_name)
+        with open(filename, 'w', encoding='utf-8') as f:
             f.write("\n\n---\n\n".join(lines))
+
 
 
 def load_clips():
@@ -66,8 +72,9 @@ def save_clips(clips):
     """
     Save new clips to DATA_FILE
     """
-    with open(DATA_FILE, 'wb') as f:
-        json.dump(clips, f)
+    with open(DATA_FILE, 'w', encoding='utf-8') as f:
+        json.dump(clips, f, ensure_ascii=False)
+
 
 
 def main():
